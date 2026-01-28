@@ -1,125 +1,545 @@
 # Scoring Configuration for MCA Lead Intelligence
+# Version 4.0 - Time-Weighted Scoring Engine
 # All weights and thresholds are centralized here for easy tuning
 
-# Dimension weights (must sum to appropriate total based on phase)
-# Phase 1: FIT only
-# Phase 2: FIT + INTENT
-# Phase 3: FIT + INTENT + TIMING
+# =============================================================================
+# DIMENSION WEIGHTS (v4.0)
+# =============================================================================
+# v4.0 adjusts weights to account for time-weighting embedded in Intent
 weights:
-  fit: 1.0      # Phase 1: 100% FIT
-  intent: 0.0   # Phase 2: Will add
-  timing: 0.0   # Phase 3: Will add
+  fit: 0.40      # Revenue capacity determines MCA viability
+  intent: 0.40   # Intent signals predict response rates (now time-weighted)
+  timing: 0.20   # Reduced—timing now embedded in Intent decay + Freshness Multiplier
 
-# FIT Dimension Components (0-100 scaled)
+# =============================================================================
+# LEAD FRESHNESS SYSTEM (NEW in v4.0)
+# =============================================================================
+# Global multiplier applied to final composite score based on lead age
+freshness:
+  flags:
+    hot:
+      max_hours: 48
+      multiplier: 1.30
+      label: "🔥 HOT"
+      action: "DROP EVERYTHING. Contact immediately. Highest conversion window."
+    warm:
+      max_days: 7
+      multiplier: 1.15
+      label: "⚡ WARM"
+      action: "High priority. Contact within 24 hours. Strong conversion potential."
+    standard:
+      max_days: 14
+      multiplier: 1.00
+      label: "● STANDARD"
+      action: "Normal priority. Work through queue. Good conversion potential."
+    cooling:
+      max_days: 30
+      multiplier: 0.85
+      label: "❄ COOLING"
+      action: "Lower priority. May need re-engagement strategy. Declining odds."
+    cold:
+      max_days: 60
+      multiplier: 0.65
+      label: "◌ COLD"
+      action: "Low priority. Situation may have changed. Verify before calling."
+    stale:
+      max_days: 90
+      multiplier: 0.45
+      label: "○ STALE"
+      action: "Nurture only. Signal likely resolved. Move to drip campaign."
+    dead:
+      max_days: 180
+      multiplier: 0.25
+      label: "✕ DEAD"
+      action: "Archive. Opportunity window closed. Quarterly re-scan only."
+    expired:
+      max_days: 999999
+      multiplier: 0.10
+      label: "∅ EXPIRED"
+      action: "Remove from active pipeline. Data retention only."
+
+# =============================================================================
+# SIGNAL DECAY CONFIGURATION (NEW in v4.0)
+# =============================================================================
+# Exponential decay: Signal_Value(t) = Base_Value × e^(-λt)
+# Where λ = ln(2) / half_life_days
+decay_classes:
+  rapid:
+    half_life_days: 7
+    lambda: 0.099  # Lose ~10% per day
+    description: "Position fills, moment passes quickly"
+
+  rapid_extended:
+    half_life_days: 10
+    lambda: 0.069  # Lose ~7% per day
+    description: "Slightly longer rapid decay"
+
+  standard:
+    half_life_days: 21
+    lambda: 0.033  # Lose ~3% per day
+    description: "Event momentum fades over weeks"
+
+  standard_extended:
+    half_life_days: 30
+    lambda: 0.023  # Lose ~2% per day
+    description: "Extended standard decay"
+
+  extended:
+    half_life_days: 45
+    lambda: 0.015  # Lose ~1.5% per day
+    description: "Financing decisions take time"
+
+  extended_long:
+    half_life_days: 60
+    lambda: 0.012  # Lose ~1% per day
+    description: "Long extended decay"
+
+  structural:
+    half_life_days: 90
+    lambda: 0.008  # Lose ~0.8% per day
+    description: "Persistent business characteristics"
+
+# =============================================================================
+# FIT DIMENSION (v4.0 - Data-Calibrated)
+# =============================================================================
+# Total: 100 points
 fit_components:
-  # Industry Propensity (max 10 raw points -> scaled)
+  # Estimated Revenue Tier (0-35 points)
+  estimated_revenue:
+    max_points: 35
+    weight: 1.0
+    tiers:
+      - min_monthly: 150000
+        points: 35
+        label: "$150K+ monthly"
+      - min_monthly: 100000
+        points: 30
+        label: "$100K-$149K monthly"
+      - min_monthly: 75000
+        points: 25
+        label: "$75K-$99K monthly"
+      - min_monthly: 50000
+        points: 20
+        label: "$50K-$74K monthly"
+      - min_monthly: 25000
+        points: 12
+        label: "$25K-$49K monthly"
+      - min_monthly: 0
+        points: 5
+        label: "<$25K monthly"
+        flag: undersize
+
+  # Revenue Consistency Profile (0-30 points)
+  revenue_consistency:
+    max_points: 30
+    weight: 1.0
+    profiles:
+      highly_recurring:
+        points: 30
+        industries:
+          - healthcare
+          - dental
+          - veterinary
+          - salon_spa
+          - fitness
+          - childcare
+      steady:
+        points: 25
+        industries:
+          - restaurants
+          - retail
+          - auto_services
+          - pharmacy
+      seasonal_predictable:
+        points: 18
+        industries:
+          - hvac
+          - landscaping
+          - pool_services
+          - tax_prep
+      moderately_lumpy:
+        points: 12
+        industries:
+          - residential_construction
+          - consulting
+          - catering
+      highly_lumpy:
+        points: 5
+        industries:
+          - commercial_construction
+          - real_estate
+
+  # Revenue Quality Profile (0-20 points) - CC Processing Likelihood
+  revenue_quality:
+    max_points: 20
+    weight: 1.0
+    profiles:
+      very_high_cc:  # 70%+ CC
+        points: 20
+        industries:
+          - restaurants
+          - retail
+          - salon_spa
+          - hotels
+      high_cc:  # 50-70% CC
+        points: 16
+        industries:
+          - healthcare
+          - fitness
+          - auto_services
+          - veterinary
+      moderate_cc:  # 30-50% CC
+        points: 12
+        industries:
+          - professional_services
+          - hvac
+      low_cc:  # 10-30% CC
+        points: 6
+        industries:
+          - wholesale
+          - consulting
+      very_low_cc:  # <10% CC
+        points: 2
+        industries:
+          - construction
+          - trucking
+          - manufacturing
+
+  # MCA Industry Propensity (0-10 points) - CALIBRATED from 7,634 deals
   industry_propensity:
     max_points: 10
     weight: 1.0
+    # See industries.yaml for full mapping
 
-  # Time in Business (max 5 raw points -> scaled)
+  # Time in Business (0-5 points) - CALIBRATED
   time_in_business:
     max_points: 5
     weight: 1.0
     thresholds:
-      - min_months: 60    # 5+ years
+      - min_months: 60    # 5+ years (60% of deals)
         points: 5
-      - min_months: 36    # 3-5 years
+      - min_months: 36    # 3-5 years (16% of deals)
         points: 4
-      - min_months: 24    # 2-3 years
+      - min_months: 24    # 2-3 years (9% of deals)
         points: 3
-      - min_months: 12    # 1-2 years
+      - min_months: 12    # 1-2 years (7% of deals)
         points: 2
-      - min_months: 0     # <1 year
+      - min_months: 0     # <1 year (8% of deals)
         points: 0
         flag: nurture
-        nurture_reason: "Business less than 1 year old"
+        nurture_reason: "Business less than 1 year old - follow up at 1-year mark"
 
-# Total raw FIT points for scaling
-fit_max_raw_points: 15  # industry (10) + TIB (5)
+# Total max raw FIT points for scaling
+fit_max_raw_points: 100  # Revenue(35) + Consistency(30) + Quality(20) + Propensity(10) + TIB(5)
 
-# INTENT Dimension Components (Phase 2)
-intent_components:
-  # UCC Refinance Window Score
-  ucc_refinance:
+# =============================================================================
+# INTENT DIMENSION (v4.0 - Time-Weighted)
+# =============================================================================
+# All intent signals are time-weighted using exponential decay
+intent_signals:
+  # Growth Signals (0-35 points max)
+  growth:
+    active_hiring_5plus:
+      base_points: 20
+      decay_class: rapid
+      detection: "Indeed, LinkedIn, career pages"
+    new_location:
+      base_points: 20
+      decay_class: standard
+      detection: "News, social, permits, Google Maps"
+    franchise_expansion:
+      base_points: 18
+      decay_class: standard
+      detection: "State registrations"
+    contract_win:
+      base_points: 15
+      decay_class: standard
+      detection: "News, social, press releases"
+    active_hiring_2to4:
+      base_points: 12
+      decay_class: rapid
+      detection: "Indeed, LinkedIn"
+    equipment_purchase:
+      base_points: 12
+      decay_class: standard
+      detection: "Social media, job postings"
+    expansion_language:
+      base_points: 10
+      decay_class: rapid
+      detection: "Website, social media"
+    active_hiring_1:
+      base_points: 5
+      decay_class: rapid
+      detection: "Indeed, LinkedIn"
+
+  # Refinance Eligibility Signals (0-25 points max) - KEY PATHWAY
+  # 49% of deals are 2nd position or higher
+  refinance:
+    ucc_optimal_window:  # 4-6 months
+      base_points: 25
+      decay_class: extended  # Special: uses UCC window curve
+      detection: "Secretary of State UCC search"
+    ucc_termination:
+      base_points: 20
+      decay_class: extended
+      detection: "Secretary of State UCC search"
+    ucc_late_window:  # 6-9 months
+      base_points: 18
+      decay_class: extended
+      detection: "Secretary of State UCC search"
+    multiple_mca_uccs:
+      base_points: 15
+      decay_class: extended
+      detection: "Secretary of State UCC search"
+    ucc_early_window:  # 3-4 months
+      base_points: 10
+      decay_class: extended
+      detection: "Secretary of State UCC search"
+
+  # Operational Signals (0-25 points max)
+  operational:
+    seasonal_pre_peak:
+      base_points: 15
+      decay_class: standard
+      detection: "Industry + calendar timing"
+    renovation_activity:
+      base_points: 12
+      decay_class: standard
+      detection: "Permits, social media"
+    inventory_restocking:
+      base_points: 10
+      decay_class: rapid
+      detection: "Industry patterns, website"
+    fleet_vehicle_needs:
+      base_points: 10
+      decay_class: standard
+      detection: "Job postings"
+    technology_upgrade:
+      base_points: 8
+      decay_class: standard
+      detection: "Job postings, website changes"
+
+  # Stress Signals (0-15 points max)
+  stress:
+    tax_lien:
+      base_points: 12
+      decay_class: extended
+      detection: "Public records"
+    judgment_filed:
+      base_points: 10
+      decay_class: extended
+      detection: "Court records"
+    emergency_promotions:
+      base_points: 8
+      decay_class: rapid
+      detection: "Social, website"
+    reduced_hours:
+      base_points: 8
+      decay_class: rapid
+      detection: "Google Business"
+    negative_review_spike:
+      base_points: 5
+      decay_class: rapid
+      detection: "Google, Yelp"
+
+# Intent max raw points for scaling
+intent_max_raw_points: 100
+
+# Intent pathway tags for outreach messaging
+intent_pathways:
+  growth:
+    signals: ["active_hiring", "new_location", "franchise_expansion", "contract_win"]
+    message: "Fuel your growth"
+  operational:
+    signals: ["seasonal_pre_peak", "equipment_purchase", "inventory_restocking"]
+    message: "Capital when you need it"
+  refinance:
+    signals: ["ucc_optimal_window", "ucc_termination", "multiple_mca_uccs"]
+    message: "Better terms available"
+  stress:
+    signals: ["tax_lien", "judgment_filed", "reduced_hours"]
+    message: "Bridge the gap"
+  general:
+    signals: []
+    message: "Did you know about MCA?"
+
+# =============================================================================
+# UCC REFINANCE WINDOW CURVE (v4.0)
+# =============================================================================
+# UCC filings follow an optimal window curve rather than simple decay
+# Peak at 4-6 months when merchants feel payment burden but still have runway
+ucc_refinance_window:
+  # Months since UCC filing -> Propensity multiplier (0-1)
+  windows:
+    - min_months: 0
+      max_months: 2
+      propensity: 0.20
+      label: "Too early - still deploying capital"
+    - min_months: 2
+      max_months: 3
+      propensity: 0.50
+      label: "Starting to feel payments"
+    - min_months: 3
+      max_months: 4
+      propensity: 0.75
+      label: "Optimal early window"
+    - min_months: 4
+      max_months: 5
+      propensity: 1.00
+      label: "PEAK WINDOW"
+    - min_months: 5
+      max_months: 6
+      propensity: 1.00
+      label: "PEAK WINDOW"
+    - min_months: 6
+      max_months: 7
+      propensity: 0.85
+      label: "Still good"
+    - min_months: 7
+      max_months: 8
+      propensity: 0.65
+      label: "May have refinanced elsewhere"
+    - min_months: 8
+      max_months: 9
+      propensity: 0.45
+      label: "Late window"
+    - min_months: 9
+      max_months: 10
+      propensity: 0.30
+      label: "Very late"
+    - min_months: 10
+      max_months: 999
+      propensity: 0.15
+      label: "Stale signal"
+
+# =============================================================================
+# TIMING DIMENSION (v4.0)
+# =============================================================================
+# Reduced from 30% to 20% weight - timing now embedded in Intent decay
+timing_components:
+  # Seasonal Timing (0-30 points)
+  seasonal:
+    max_points: 30
+    weight: 1.0
+    windows:
+      - weeks_before_peak: 4
+        max_weeks_before_peak: 6
+        points: 30
+        label: "4-6 weeks before peak"
+      - weeks_before_peak: 6
+        max_weeks_before_peak: 8
+        points: 25
+        label: "6-8 weeks before peak"
+      - weeks_before_peak: 8
+        max_weeks_before_peak: 12
+        points: 18
+        label: "8-12 weeks before peak"
+      - during_peak: true
+        points: 15
+        label: "During peak season"
+      - off_season: true
+        points: 8
+        label: "Off-season"
+
+  # Signal Recency (0-30 points)
+  signal_recency:
+    max_points: 30
+    weight: 1.0
+    thresholds:
+      - max_hours: 48
+        points: 30
+        label: "< 48 hours"
+        freshness_flag: hot
+      - max_days: 7
+        points: 25
+        label: "2-7 days"
+        freshness_flag: warm
+      - max_days: 14
+        points: 18
+        label: "7-14 days"
+        freshness_flag: standard
+      - max_days: 30
+        points: 10
+        label: "14-30 days"
+        freshness_flag: cooling
+      - max_days: 60
+        points: 5
+        label: "30-60 days"
+        freshness_flag: cold
+      - max_days: 999999
+        points: 0
+        label: "> 60 days"
+        freshness_flag: stale
+
+  # Refinance Window (0-15 points)
+  refinance_window:
     max_points: 15
     weight: 1.0
-    # See mca_lenders.yaml for timing windows
-
-  # MCA Stack Count (multiple existing positions)
-  mca_stack:
-    max_points: 10
-    weight: 1.0
+    # Uses ucc_refinance_window config above
     thresholds:
-      - count: 3
-        points: 10
-        label: "Heavy stack - strong refi candidate"
-      - count: 2
-        points: 7
-        label: "Moderate stack"
-      - count: 1
-        points: 4
-        label: "Single position"
-      - count: 0
-        points: 0
-
-# TIMING Dimension Components (Phase 3)
-timing_components:
-  # Signal Freshness
-  signal_freshness:
-    max_points: 10
-    weight: 1.0
-    thresholds:
-      - max_days: 7
-        points: 10
-        label: "This week"
-      - max_days: 14
+      - ucc_months: 4
+        max_ucc_months: 5
+        points: 15
+        label: "OPTIMAL"
+      - ucc_months: 5
+        max_ucc_months: 6
+        points: 12
+        label: "OPTIMAL"
+      - ucc_months: 6
+        max_ucc_months: 7
         points: 8
-        label: "Last 2 weeks"
-      - max_days: 30
+        label: "GOOD"
+      - ucc_months: 3
+        max_ucc_months: 4
         points: 5
-        label: "Last month"
-      - max_days: 60
-        points: 2
-        label: "Last 2 months"
-      - max_days: 999
-        points: 0
-        label: "Stale"
+        label: "EARLY"
+      - ucc_months: 7
+        max_ucc_months: 9
+        points: 5
+        label: "LATE"
 
-# Priority Level Thresholds (composite score -> priority)
+# Timing max raw points for scaling
+timing_max_raw_points: 75  # Seasonal(30) + Recency(30) + Refinance(15)
+
+# =============================================================================
+# PRIORITY LEVEL THRESHOLDS
+# =============================================================================
+# Applied to FINAL SCORE (after freshness multiplier)
 priority_thresholds:
   p1:
     min_score: 75
     max_score: 100
     label: "Hot Lead"
-    action: "Immediate outreach"
+    action: "Immediate outreach - within 24 hours"
     color: "#FF0000"
   p2:
     min_score: 60
     max_score: 74
     label: "Strong Lead"
-    action: "High priority follow-up"
+    action: "High priority - within 48 hours"
     color: "#FF6600"
   p3:
     min_score: 45
     max_score: 59
     label: "Good Lead"
-    action: "Standard follow-up"
+    action: "Standard outreach - within 1 week"
     color: "#FFCC00"
   p4:
     min_score: 30
     max_score: 44
     label: "Moderate Lead"
-    action: "Nurture sequence"
+    action: "Nurture sequence - automated drip"
     color: "#99CC00"
   p5:
     min_score: 0
     max_score: 29
     label: "Low Priority"
-    action: "Long-term nurture"
+    action: "Monitor - quarterly review"
     color: "#00CC00"
 
-# Score adjustments and bonuses
+# =============================================================================
+# SCORE ADJUSTMENTS AND BONUSES
+# =============================================================================
 adjustments:
   # Bonus for MCA-related signals
   mca_related_bonus: 10
@@ -136,7 +556,35 @@ adjustments:
     - count: 4
       bonus: 15
 
-# Deduplication settings
+# =============================================================================
+# GEOGRAPHIC PROPENSITY (v4.0 Calibrated)
+# =============================================================================
+# State-level concentration data from 7,634 deals
+geographic_propensity:
+  tier1:
+    states: ["FL", "TX", "CA", "NY"]
+    deal_percentage: 37
+    bonus: 5
+    priority: "HIGHEST"
+  tier2:
+    states: ["GA", "NJ", "NC", "IL", "PA", "CT"]
+    deal_percentage: 21
+    bonus: 3
+    priority: "HIGH"
+  tier3:
+    states: ["OH", "AZ", "MD", "MI", "VA", "WA", "MA", "CO", "TN", "IN"]
+    deal_percentage: 22
+    bonus: 0
+    priority: "STANDARD"
+  tier4:
+    states: []  # All other states
+    deal_percentage: 20
+    bonus: 0
+    priority: "LOWER"
+
+# =============================================================================
+# DEDUPLICATION SETTINGS
+# =============================================================================
 deduplication:
   # Time window to consider signals as duplicates (hours)
   time_window_hours: 24
@@ -147,7 +595,9 @@ deduplication:
     - state
     - signal_type
 
-# Export settings
+# =============================================================================
+# EXPORT SETTINGS
+# =============================================================================
 export:
   # Default columns for CSV export
   columns:
@@ -156,13 +606,20 @@ export:
     - industry
     - state
     - fit_score
+    - intent_score
+    - timing_score
     - composite_score
+    - final_score
+    - freshness_flag
+    - freshness_multiplier
     - priority_level
+    - intent_pathway
     - signal_type
     - signal_date
     - signal_age_days
     - is_mca_related
     - mca_lender
+    - ucc_months_old
     - time_in_business_months
     - address_city
     - address_state
@@ -170,7 +627,9 @@ export:
 
   # Sort order for export
   sort_by:
-    - field: composite_score
+    - field: final_score
       order: desc
+    - field: freshness_flag
+      order: asc
     - field: signal_date
       order: desc
