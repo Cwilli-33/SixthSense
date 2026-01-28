@@ -55,6 +55,14 @@ class IntentSignalType(Enum):
     REDUCED_HOURS = "reduced_hours"
     NEGATIVE_REVIEW_SPIKE = "negative_review_spike"
 
+    # General UCC signals
+    UCC_MCA_LENDER = "ucc_mca_lender"  # UCC from known MCA lender
+    UCC_GENERAL = "ucc_general"  # General UCC filing
+
+    # SEC filing signals
+    SEC_FINANCING = "sec_financing"  # SEC filing indicating financing activity
+    SEC_8K_MATERIAL = "sec_8k_material"  # Material event disclosure
+
 
 class IntentPathway(Enum):
     """Intent pathway tags for outreach messaging."""
