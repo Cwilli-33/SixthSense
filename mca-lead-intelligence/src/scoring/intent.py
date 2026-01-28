@@ -63,6 +63,12 @@ class IntentSignalType(Enum):
     SEC_FINANCING = "sec_financing"  # SEC filing indicating financing activity
     SEC_8K_MATERIAL = "sec_8k_material"  # Material event disclosure
 
+    # Permit signals
+    PERMIT_BUILDING = "permit_building"  # Building permit
+    PERMIT_RENOVATION = "permit_renovation"  # Renovation permit
+    PERMIT_NEW_LOCATION = "permit_new_location"  # New location permit (occupancy/license)
+    PERMIT_EXPANSION = "permit_expansion"  # General expansion permit
+
 
 class IntentPathway(Enum):
     """Intent pathway tags for outreach messaging."""

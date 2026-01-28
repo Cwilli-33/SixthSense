@@ -18,6 +18,10 @@ from src.harvesters.base import BaseHarvester, HarvestResult
 from src.harvesters.mca_detector import mca_detector
 from src.harvesters.sec_edgar import SECEdgarHarvester
 from src.harvesters.ucc import FloridaUCCHarvester
+from src.harvesters.ucc_multistate import MultiStateUCCHarvester
+from src.harvesters.hiring import HiringSignalsHarvester
+from src.harvesters.tax_liens import TaxLienHarvester
+from src.harvesters.permits import PermitsHarvester
 from src.models.signal import SignalCreate
 
 
@@ -89,6 +93,7 @@ class HarvesterOrchestrator:
 
     def _register_defaults(self) -> None:
         """Register default harvesters."""
+        # Core UCC harvesters (highest priority - most valuable signals)
         self.register_harvester(
             "florida_ucc",
             FloridaUCCHarvester,
@@ -96,10 +101,40 @@ class HarvesterOrchestrator:
             kwargs={"requests_per_minute": 20},
         )
         self.register_harvester(
+            "multistate_ucc",
+            MultiStateUCCHarvester,
+            priority=1,
+            kwargs={"requests_per_minute": 15, "states": ["NY", "TX", "CA"]},
+        )
+
+        # SEC filings (public companies)
+        self.register_harvester(
             "sec_edgar",
             SECEdgarHarvester,
             priority=2,
             kwargs={"requests_per_minute": 30},
+        )
+
+        # Growth signals
+        self.register_harvester(
+            "hiring",
+            HiringSignalsHarvester,
+            priority=3,
+            kwargs={"requests_per_minute": 20},
+        )
+        self.register_harvester(
+            "permits",
+            PermitsHarvester,
+            priority=3,
+            kwargs={"requests_per_minute": 15},
+        )
+
+        # Stress signals
+        self.register_harvester(
+            "tax_liens",
+            TaxLienHarvester,
+            priority=4,
+            kwargs={"requests_per_minute": 15},
         )
 
     def register_harvester(

@@ -238,21 +238,66 @@ class LeadPipeline:
 
         intent_signals = []
 
-        # Determine signal type and scoring parameters
+        # Determine signal type and scoring parameters based on source
         is_mca_related = metadata_dict.get("is_mca_related", False)
+        signal_strength = metadata_dict.get("signal_strength", "")
+        raw_data = signal.raw_data or {}
 
-        if is_mca_related:
-            # MCA-related UCC filing - high value, standard decay
-            signal_type = IntentSignalType.UCC_MCA_LENDER
-            base_points = 90
-            decay_class = DecayClass.STANDARD
+        # Route based on signal source
+        if signal.source == "HIRING_SIGNALS":
+            # Hiring signals indicate growth - use total postings to determine strength
+            total_postings = raw_data.get("total_postings", 1)
+            if total_postings >= 5:
+                signal_type = IntentSignalType.ACTIVE_HIRING_5PLUS
+                base_points = 85
+            elif total_postings >= 2:
+                signal_type = IntentSignalType.ACTIVE_HIRING_2TO4
+                base_points = 60
+            else:
+                signal_type = IntentSignalType.ACTIVE_HIRING_1
+                base_points = 30
+            decay_class = DecayClass.RAPID  # Hiring signals decay quickly
+
+        elif signal.source == "PERMITS":
+            # Permit signals indicate expansion/renovation
+            signal_subtype = raw_data.get("signal_subtype", "expansion")
+            if signal_subtype == "new_location":
+                signal_type = IntentSignalType.PERMIT_NEW_LOCATION
+                base_points = 80
+            elif signal_subtype == "renovation":
+                signal_type = IntentSignalType.PERMIT_RENOVATION
+                base_points = 55
+            else:
+                signal_type = IntentSignalType.PERMIT_EXPANSION
+                base_points = 50
+            decay_class = DecayClass.EXTENDED  # Permits are valid longer
+
+        elif signal.source == "TAX_LIENS":
+            # Tax liens are stress signals
+            signal_type = IntentSignalType.TAX_LIEN
+            # Points based on severity
+            if signal_strength == "high_stress":
+                base_points = 70
+            elif signal_strength == "moderate_stress":
+                base_points = 55
+            else:
+                base_points = 35
+            decay_class = DecayClass.STRUCTURAL  # Liens are long-term indicators
+
         elif signal.source == "SEC_EDGAR":
-            # SEC filing indicates financing activity - moderate value, extended decay
+            # SEC filing indicates financing activity
             signal_type = IntentSignalType.SEC_FINANCING
             base_points = 40
             decay_class = DecayClass.EXTENDED
+
+        elif is_mca_related:
+            # MCA-related UCC filing - high value
+            signal_type = IntentSignalType.UCC_MCA_LENDER
+            base_points = 90
+            decay_class = DecayClass.STANDARD
+
         else:
-            # Standard UCC filing - moderate value, standard decay
+            # Standard UCC filing - moderate value
             signal_type = IntentSignalType.UCC_GENERAL
             base_points = 50
             decay_class = DecayClass.STANDARD
