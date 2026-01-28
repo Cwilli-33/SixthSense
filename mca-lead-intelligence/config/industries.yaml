@@ -1,0 +1,380 @@
+# Industry Classification and MCA Propensity Scores
+# Propensity: Likelihood of needing/qualifying for MCA (0-10)
+
+industries:
+  # VERY HIGH PROPENSITY (10 points)
+  # These industries have high cash flow needs, seasonal patterns,
+  # and strong track record with MCA products
+
+  restaurants:
+    propensity: 10
+    keywords:
+      - "restaurant"
+      - "restaurants"
+      - "ristorante"
+      - "trattoria"
+      - "bistro"
+      - "cafe"
+      - "coffee"
+      - "diner"
+      - "grill"
+      - "bar"
+      - "pub"
+      - "tavern"
+      - "pizzeria"
+      - "pizza"
+      - "sushi"
+      - "steakhouse"
+      - "seafood"
+      - "bbq"
+      - "barbecue"
+      - "tacos"
+      - "mexican food"
+      - "chinese food"
+      - "thai food"
+      - "indian cuisine"
+      - "food service"
+      - "catering"
+      - "bakery"
+      - "bagel"
+      - "deli"
+      - "delicatessen"
+      - "ice cream"
+      - "smoothie"
+      - "juice bar"
+      - "fast food"
+      - "quick serve"
+
+  trucking:
+    propensity: 10
+    keywords:
+      - "trucking"
+      - "truck"
+      - "freight"
+      - "logistics"
+      - "transport"
+      - "transportation"
+      - "hauling"
+      - "shipping"
+      - "delivery"
+      - "carrier"
+      - "moving"
+      - "movers"
+      - "drayage"
+      - "ltl"
+      - "ftl"
+      - "flatbed"
+      - "towing"
+      - "dispatch"
+
+  construction:
+    propensity: 10
+    keywords:
+      - "construction"
+      - "contractor"
+      - "contractors"
+      - "builder"
+      - "builders"
+      - "building"
+      - "roofing"
+      - "roofer"
+      - "plumbing"
+      - "plumber"
+      - "electrical"
+      - "electrician"
+      - "carpentry"
+      - "carpenter"
+      - "masonry"
+      - "mason"
+      - "concrete"
+      - "paving"
+      - "asphalt"
+      - "demolition"
+      - "excavation"
+      - "excavating"
+      - "framing"
+      - "drywall"
+      - "painting contractor"
+      - "flooring"
+      - "tile"
+      - "remodeling"
+      - "renovation"
+      - "general contractor"
+
+  hvac:
+    propensity: 10
+    keywords:
+      - "hvac"
+      - "heating"
+      - "cooling"
+      - "air conditioning"
+      - "air condition"
+      - "ac repair"
+      - "furnace"
+      - "ventilation"
+      - "duct"
+      - "climate control"
+
+  # HIGH PROPENSITY (8 points)
+
+  auto_services:
+    propensity: 8
+    keywords:
+      - "auto"
+      - "automotive"
+      - "car"
+      - "vehicle"
+      - "mechanic"
+      - "auto repair"
+      - "auto body"
+      - "collision"
+      - "tire"
+      - "tires"
+      - "oil change"
+      - "brake"
+      - "transmission"
+      - "muffler"
+      - "detailing"
+      - "car wash"
+      - "carwash"
+      - "smog"
+      - "auto parts"
+
+  retail:
+    propensity: 8
+    keywords:
+      - "retail"
+      - "store"
+      - "shop"
+      - "boutique"
+      - "mart"
+      - "market"
+      - "grocery"
+      - "supermarket"
+      - "convenience"
+      - "liquor"
+      - "wine"
+      - "beer"
+      - "smoke shop"
+      - "tobacco"
+      - "gift shop"
+      - "clothing"
+      - "apparel"
+      - "fashion"
+      - "jewelry"
+      - "furniture"
+      - "home goods"
+      - "electronics"
+      - "hardware"
+      - "sporting goods"
+      - "pet store"
+      - "florist"
+      - "flower"
+
+  healthcare:
+    propensity: 8
+    keywords:
+      - "medical"
+      - "healthcare"
+      - "health care"
+      - "clinic"
+      - "dental"
+      - "dentist"
+      - "orthodontic"
+      - "chiropractic"
+      - "chiropractor"
+      - "physical therapy"
+      - "pharmacy"
+      - "urgent care"
+      - "veterinary"
+      - "veterinarian"
+      - "vet clinic"
+      - "optometry"
+      - "optometrist"
+      - "dermatology"
+      - "wellness"
+      - "med spa"
+      - "medspa"
+      - "home health"
+
+  salon_spa:
+    propensity: 8
+    keywords:
+      - "salon"
+      - "hair"
+      - "beauty"
+      - "barber"
+      - "barbershop"
+      - "spa"
+      - "nail"
+      - "nails"
+      - "manicure"
+      - "pedicure"
+      - "waxing"
+      - "lash"
+      - "eyelash"
+      - "brow"
+      - "eyebrow"
+      - "tanning"
+      - "massage"
+      - "esthetics"
+      - "aesthetics"
+      - "cosmetology"
+
+  # MODERATE PROPENSITY (5 points)
+
+  manufacturing:
+    propensity: 5
+    keywords:
+      - "manufacturing"
+      - "manufacturer"
+      - "factory"
+      - "fabrication"
+      - "machine shop"
+      - "machining"
+      - "welding"
+      - "metal"
+      - "steel"
+      - "plastics"
+      - "printing"
+      - "print shop"
+      - "packaging"
+      - "assembly"
+      - "production"
+
+  wholesale:
+    propensity: 5
+    keywords:
+      - "wholesale"
+      - "wholesaler"
+      - "distributor"
+      - "distribution"
+      - "supply"
+      - "supplier"
+      - "import"
+      - "export"
+      - "trading"
+      - "broker"
+
+  landscaping:
+    propensity: 5
+    keywords:
+      - "landscaping"
+      - "landscape"
+      - "lawn"
+      - "lawn care"
+      - "gardening"
+      - "garden"
+      - "tree service"
+      - "tree care"
+      - "irrigation"
+      - "sprinkler"
+      - "nursery"
+      - "hardscape"
+      - "outdoor living"
+
+  professional_services:
+    propensity: 5
+    keywords:
+      - "accounting"
+      - "accountant"
+      - "cpa"
+      - "bookkeeping"
+      - "tax"
+      - "tax preparation"
+      - "legal"
+      - "law firm"
+      - "attorney"
+      - "lawyer"
+      - "insurance"
+      - "financial"
+      - "marketing"
+      - "advertising"
+      - "design"
+      - "graphic design"
+      - "architecture"
+      - "engineering"
+      - "staffing"
+      - "recruiting"
+      - "hr"
+      - "human resources"
+
+  fitness:
+    propensity: 5
+    keywords:
+      - "gym"
+      - "fitness"
+      - "crossfit"
+      - "yoga"
+      - "pilates"
+      - "personal training"
+      - "martial arts"
+      - "boxing"
+      - "dance studio"
+      - "sports"
+      - "athletic"
+
+  # LOWER PROPENSITY (2 points)
+
+  consulting:
+    propensity: 2
+    keywords:
+      - "consulting"
+      - "consultant"
+      - "advisory"
+      - "management consulting"
+      - "business consulting"
+      - "strategy"
+
+  technology:
+    propensity: 2
+    keywords:
+      - "technology"
+      - "tech"
+      - "software"
+      - "it services"
+      - "computer"
+      - "web development"
+      - "app"
+      - "digital"
+      - "cyber"
+      - "data"
+      - "cloud"
+      - "saas"
+
+  real_estate:
+    propensity: 2
+    keywords:
+      - "real estate"
+      - "realty"
+      - "realtor"
+      - "property management"
+      - "leasing"
+      - "brokerage"
+      - "apartment"
+      - "housing"
+
+  education:
+    propensity: 2
+    keywords:
+      - "school"
+      - "academy"
+      - "learning"
+      - "tutoring"
+      - "education"
+      - "training"
+      - "daycare"
+      - "childcare"
+      - "preschool"
+      - "montessori"
+
+  # DEFAULT (1 point)
+  other:
+    propensity: 1
+    keywords: []
+
+# Default propensity if no industry match
+default_propensity: 1
+
+# Minimum keyword match confidence (0-1)
+min_confidence: 0.5

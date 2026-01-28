@@ -1,0 +1,176 @@
+# Scoring Configuration for MCA Lead Intelligence
+# All weights and thresholds are centralized here for easy tuning
+
+# Dimension weights (must sum to appropriate total based on phase)
+# Phase 1: FIT only
+# Phase 2: FIT + INTENT
+# Phase 3: FIT + INTENT + TIMING
+weights:
+  fit: 1.0      # Phase 1: 100% FIT
+  intent: 0.0   # Phase 2: Will add
+  timing: 0.0   # Phase 3: Will add
+
+# FIT Dimension Components (0-100 scaled)
+fit_components:
+  # Industry Propensity (max 10 raw points -> scaled)
+  industry_propensity:
+    max_points: 10
+    weight: 1.0
+
+  # Time in Business (max 5 raw points -> scaled)
+  time_in_business:
+    max_points: 5
+    weight: 1.0
+    thresholds:
+      - min_months: 60    # 5+ years
+        points: 5
+      - min_months: 36    # 3-5 years
+        points: 4
+      - min_months: 24    # 2-3 years
+        points: 3
+      - min_months: 12    # 1-2 years
+        points: 2
+      - min_months: 0     # <1 year
+        points: 0
+        flag: nurture
+        nurture_reason: "Business less than 1 year old"
+
+# Total raw FIT points for scaling
+fit_max_raw_points: 15  # industry (10) + TIB (5)
+
+# INTENT Dimension Components (Phase 2)
+intent_components:
+  # UCC Refinance Window Score
+  ucc_refinance:
+    max_points: 15
+    weight: 1.0
+    # See mca_lenders.yaml for timing windows
+
+  # MCA Stack Count (multiple existing positions)
+  mca_stack:
+    max_points: 10
+    weight: 1.0
+    thresholds:
+      - count: 3
+        points: 10
+        label: "Heavy stack - strong refi candidate"
+      - count: 2
+        points: 7
+        label: "Moderate stack"
+      - count: 1
+        points: 4
+        label: "Single position"
+      - count: 0
+        points: 0
+
+# TIMING Dimension Components (Phase 3)
+timing_components:
+  # Signal Freshness
+  signal_freshness:
+    max_points: 10
+    weight: 1.0
+    thresholds:
+      - max_days: 7
+        points: 10
+        label: "This week"
+      - max_days: 14
+        points: 8
+        label: "Last 2 weeks"
+      - max_days: 30
+        points: 5
+        label: "Last month"
+      - max_days: 60
+        points: 2
+        label: "Last 2 months"
+      - max_days: 999
+        points: 0
+        label: "Stale"
+
+# Priority Level Thresholds (composite score -> priority)
+priority_thresholds:
+  p1:
+    min_score: 75
+    max_score: 100
+    label: "Hot Lead"
+    action: "Immediate outreach"
+    color: "#FF0000"
+  p2:
+    min_score: 60
+    max_score: 74
+    label: "Strong Lead"
+    action: "High priority follow-up"
+    color: "#FF6600"
+  p3:
+    min_score: 45
+    max_score: 59
+    label: "Good Lead"
+    action: "Standard follow-up"
+    color: "#FFCC00"
+  p4:
+    min_score: 30
+    max_score: 44
+    label: "Moderate Lead"
+    action: "Nurture sequence"
+    color: "#99CC00"
+  p5:
+    min_score: 0
+    max_score: 29
+    label: "Low Priority"
+    action: "Long-term nurture"
+    color: "#00CC00"
+
+# Score adjustments and bonuses
+adjustments:
+  # Bonus for MCA-related signals
+  mca_related_bonus: 10
+
+  # Penalty for businesses flagged as nurture
+  nurture_penalty: 0  # No penalty, just flag
+
+  # Bonus for multiple signals on same business
+  multi_signal_bonus:
+    - count: 2
+      bonus: 5
+    - count: 3
+      bonus: 10
+    - count: 4
+      bonus: 15
+
+# Deduplication settings
+deduplication:
+  # Time window to consider signals as duplicates (hours)
+  time_window_hours: 24
+
+  # Fields to match for deduplication
+  match_fields:
+    - business_name
+    - state
+    - signal_type
+
+# Export settings
+export:
+  # Default columns for CSV export
+  columns:
+    - business_name
+    - dba_name
+    - industry
+    - state
+    - fit_score
+    - composite_score
+    - priority_level
+    - signal_type
+    - signal_date
+    - signal_age_days
+    - is_mca_related
+    - mca_lender
+    - time_in_business_months
+    - address_city
+    - address_state
+    - address_zip
+
+  # Sort order for export
+  sort_by:
+    - field: composite_score
+      order: desc
+    - field: signal_date
+      order: desc

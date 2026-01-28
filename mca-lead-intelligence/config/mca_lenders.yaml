@@ -1,0 +1,143 @@
+# Known MCA Lenders and Funders
+# Used for detecting MCA-related UCC filings
+
+mca_lenders:
+  # Major MCA Funders
+  - "OnDeck Capital"
+  - "On Deck Capital"
+  - "On Deck Capital Inc"
+  - "OnDeck Capital Inc"
+  - "Credibly"
+  - "Credibly Inc"
+  - "Rapid Finance"
+  - "Rapid Capital Funding"
+  - "Rapid Capital Funding LLC"
+  - "Fundbox"
+  - "Fundbox Inc"
+  - "Kabbage"
+  - "Kabbage Inc"
+  - "Kabbage Funding LLC"
+  - "BlueVine"
+  - "BlueVine Capital"
+  - "BlueVine Capital Inc"
+  - "Bluevine Inc"
+  - "Square Capital"
+  - "Square Capital LLC"
+  - "Square Financial Services"
+  - "PayPal Working Capital"
+  - "PayPal Working Capital LLC"
+  - "Libertas Funding"
+  - "Libertas Funding LLC"
+  - "Forward Financing"
+  - "Forward Financing LLC"
+  - "Pearl Capital"
+  - "Pearl Beta Funding"
+  - "Pearl Beta Funding LLC"
+
+  # Additional Known MCA Funders
+  - "CAN Capital"
+  - "CAN Capital Inc"
+  - "Fora Financial"
+  - "Fora Financial LLC"
+  - "Greenbox Capital"
+  - "Greenbox Capital LLC"
+  - "National Funding"
+  - "National Funding Inc"
+  - "Reliant Funding"
+  - "Reliant Funding LLC"
+  - "Bizfi"
+  - "Bizfi LLC"
+  - "Yellowstone Capital"
+  - "Yellowstone Capital LLC"
+  - "Everest Business Funding"
+  - "Everest Business Funding LLC"
+  - "Mantis Funding"
+  - "Mantis Funding LLC"
+  - "Capytal"
+  - "Capytal com"
+  - "United Capital Source"
+  - "United Capital Source Inc"
+  - "Kalamata Capital"
+  - "Kalamata Capital Group"
+  - "Fox Business Funding"
+  - "Fox Business Funding LLC"
+  - "Merchant Growth"
+  - "Merchant Growth Ltd"
+  - "Become Capital"
+  - "Become Capital LLC"
+  - "Clear Skies Capital"
+  - "Clear Skies Capital Inc"
+  - "SBG Funding"
+  - "SBG Funding LLC"
+  - "Business Backer"
+  - "Business Backer LLC"
+  - "QuickBridge"
+  - "QuickBridge LLC"
+  - "Mulligan Funding"
+  - "Mulligan Funding LLC"
+
+# Patterns in collateral description or secured party that indicate MCA
+detection_patterns:
+  secured_party_patterns:
+    - "Merchant Cash"
+    - "MCA"
+    - "Revenue Purchase"
+    - "Future Receivables"
+    - "Accounts Receivable Purchase"
+    - "Business Cash Advance"
+    - "Revenue Based"
+
+  collateral_patterns:
+    # All-assets indicators (common in MCA)
+    - "all assets"
+    - "all inventory"
+    - "all accounts"
+    - "all equipment"
+    - "future receivables"
+    - "accounts receivable"
+    - "credit card receivables"
+    - "credit card receipts"
+    - "payment processor"
+    - "merchant account"
+    - "revenue"
+    - "proceeds"
+
+# Patterns to EXCLUDE (not MCA-related)
+exclusion_patterns:
+  - "real estate"
+  - "real property"
+  - "mortgage"
+  - "vehicle"
+  - "automobile"
+  - "motor vehicle"
+  - "boat"
+  - "aircraft"
+  - "construction equipment"  # Usually equipment financing
+  - "heavy equipment"
+
+# Refinance timing windows (months since original UCC filing)
+refinance_scoring:
+  optimal:  # 4-5 months
+    min_months: 4
+    max_months: 5
+    points: 15
+  strong:   # 5-6 months
+    min_months: 5
+    max_months: 6
+    points: 12
+  good:     # 6-7 months
+    min_months: 6
+    max_months: 7
+    points: 8
+  early:    # 3-4 months
+    min_months: 3
+    max_months: 4
+    points: 5
+  late:     # 7-9 months
+    min_months: 7
+    max_months: 9
+    points: 3
+  very_late:  # 9+ months
+    min_months: 9
+    max_months: 999
+    points: 1
